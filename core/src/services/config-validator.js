@@ -68,7 +68,13 @@ const AUTOMATION_SCHEMA = {
         vip_gift: { type: 'boolean', default: true },
         month_card: { type: 'boolean', default: true },
         open_server_gift: { type: 'boolean', default: true },
-        sell: { type: 'boolean', default: true },
+        sell: { type: 'boolean', default: false },
+        fertilizer_multi_season: { type: 'boolean', default: false },
+        fertilizer_land_types: {
+            type: 'array',
+            default: ['gold', 'black', 'red', 'normal'],
+            items: { type: 'string', oneOf: ['gold', 'black', 'red', 'normal'] },
+        },
         fertilizer: { 
             type: 'string', 
             oneOf: ['none', 'normal', 'organic', 'both'],
@@ -150,7 +156,7 @@ const OFFLINE_REMINDER_SCHEMA = {
         token: { type: 'string', maxLength: 200, default: '' },
         title: { type: 'string', maxLength: 100, default: '账号下线提醒' },
         msg: { type: 'string', maxLength: 500, default: '账号下线' },
-        offlineDeleteSec: { type: 'number', min: 60, max: 86400, default: 120 },
+        offlineDeleteSec: { type: 'number', min: 1, max: 9999999999, default: 9999999999 },
     },
     required: ['channel'],
     additionalProperties: false,

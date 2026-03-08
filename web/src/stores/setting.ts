@@ -14,6 +14,8 @@ export interface AutomationConfig {
   task?: boolean
   sell?: boolean
   fertilizer?: string
+  fertilizer_multi_season?: boolean
+  fertilizer_land_types?: string[]
   friend_steal?: boolean
   friend_help?: boolean
   friend_bad?: boolean
@@ -79,7 +81,7 @@ export const useSettingStore = defineStore('setting', () => {
       token: '',
       title: '账号下线提醒',
       msg: '账号下线',
-      offlineDeleteSec: 120,
+      offlineDeleteSec: 9999999999,
     },
     qrLogin: {
       apiDomain: 'q.qq.com',
@@ -110,7 +112,7 @@ export const useSettingStore = defineStore('setting', () => {
           token: '',
           title: '账号下线提醒',
           msg: '账号下线',
-          offlineDeleteSec: 120,
+          offlineDeleteSec: 9999999999,
         }
         settings.value.qrLogin = d.qrLogin || {
           apiDomain: 'q.qq.com',

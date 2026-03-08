@@ -16,6 +16,9 @@ const PUSHOO_CHANNELS = new Set([
     'discord', 'wxpusher',
 ]);
 const INTERVAL_MAX_SEC = 86400;
+const DEFAULT_OFFLINE_DELETE_SEC = 9999999999;
+const DEFAULT_FERTILIZER_LAND_TYPES = ['gold', 'black', 'red', 'normal'];
+const FERTILIZER_LAND_TYPE_SET = new Set(DEFAULT_FERTILIZER_LAND_TYPES);
 const DEFAULT_OFFLINE_REMINDER = {
     channel: 'webhook',
     reloginUrlMode: 'none',
@@ -23,7 +26,7 @@ const DEFAULT_OFFLINE_REMINDER = {
     token: '',
     title: '账号下线提醒',
     msg: '账号下线',
-    offlineDeleteSec: 120,
+    offlineDeleteSec: DEFAULT_OFFLINE_DELETE_SEC,
 };
 
 const DEFAULT_QR_LOGIN = {
@@ -53,8 +56,10 @@ const DEFAULT_ACCOUNT_CONFIG = {
         vip_gift: true,
         month_card: true,
         open_server_gift: true,
-        sell: true,
+        sell: false,
         fertilizer: 'none',
+        fertilizer_multi_season: false,
+        fertilizer_land_types: [...DEFAULT_FERTILIZER_LAND_TYPES],
     },
     plantingStrategy: 'preferred',
     preferredSeedId: 0,
@@ -77,7 +82,7 @@ const ALLOWED_AUTOMATION_KEYS = new Set(Object.keys(DEFAULT_ACCOUNT_CONFIG.autom
 
 let accountFallbackConfig = {
     ...DEFAULT_ACCOUNT_CONFIG,
-    automation: { ...DEFAULT_ACCOUNT_CONFIG.automation },
+    automation: { ...DEFAULT_ACCOUNT_CONFIG.automation, fertilizer_land_types: [...DEFAULT_FERTILIZER_LAND_TYPES] },
     intervals: { ...DEFAULT_ACCOUNT_CONFIG.intervals },
     friendQuietHours: { ...DEFAULT_ACCOUNT_CONFIG.friendQuietHours },
 };
@@ -159,12 +164,28 @@ function normalizeQrLoginConfig(input) {
         apiDomain: normalizeApiDomain(src.apiDomain, DEFAULT_QR_LOGIN.apiDomain),
     };
 }
+function normalizeFertilizerLandTypes(input, fallback = DEFAULT_FERTILIZER_LAND_TYPES) {
+    const source = Array.isArray(input) ? input : fallback;
+    const normalized = [];
+    for (const item of source) {
+        const value = String(item || '').trim().toLowerCase();
+        if (!FERTILIZER_LAND_TYPE_SET.has(value)) continue;
+        if (normalized.includes(value)) continue;
+        normalized.push(value);
+    }
+    return normalized;
+}
+
 function cloneAccountConfig(base = DEFAULT_ACCOUNT_CONFIG) {
     const srcAutomation = (base && base.automation && typeof base.automation === 'object')
         ? base.automation
         : {};
     const automation = { ...DEFAULT_ACCOUNT_CONFIG.automation };
     for (const key of Object.keys(automation)) {
+        if (key === 'fertilizer_land_types') {
+            automation[key] = normalizeFertilizerLandTypes(srcAutomation[key], DEFAULT_FERTILIZER_LAND_TYPES);
+            continue;
+        }
         if (srcAutomation[key] !== undefined) automation[key] = srcAutomation[key];
     }
 
@@ -199,6 +220,8 @@ function normalizeAccountConfig(input, fallback = accountFallbackConfig) {
             if (k === 'fertilizer') {
                 const allowed = ['both', 'normal', 'organic', 'none'];
                 cfg.automation[k] = allowed.includes(v) ? v : cfg.automation[k];
+            } else if (k === 'fertilizer_land_types') {
+                cfg.automation[k] = normalizeFertilizerLandTypes(v, cfg.automation[k]);
             } else {
                 cfg.automation[k] = !!v;
             }
@@ -373,7 +396,9 @@ function setAdminPasswordHash(hash) {
 loadGlobalConfig();
 
 function getAutomation(accountId) {
-    return { ...getAccountConfigSnapshot(accountId).automation };
+    const automation = { ...getAccountConfigSnapshot(accountId).automation };
+    automation.fertilizer_land_types = normalizeFertilizerLandTypes(automation.fertilizer_land_types);
+    return automation;
 }
 
 function getConfigSnapshot(accountId) {
@@ -404,6 +429,8 @@ function applyConfigSnapshot(snapshot, options = {}) {
             if (k === 'fertilizer') {
                 const allowed = ['both', 'normal', 'organic', 'none'];
                 next.automation[k] = allowed.includes(v) ? v : next.automation[k];
+            } else if (k === 'fertilizer_land_types') {
+                next.automation[k] = normalizeFertilizerLandTypes(v, next.automation[k]);
             } else {
                 next.automation[k] = !!v;
             }
@@ -650,4 +677,3 @@ module.exports = {
     getAdminPasswordHash,
     setAdminPasswordHash,
 };
-

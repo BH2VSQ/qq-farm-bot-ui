@@ -17,7 +17,7 @@ function createReloginReminderService(options) {
 
     function getOfflineAutoDeleteMs() {
         const cfg = store.getOfflineReminder ? store.getOfflineReminder() : null;
-        const sec = Math.max(1, Number.parseInt(cfg && cfg.offlineDeleteSec, 10) || 120);
+        const sec = Math.max(1, Number.parseInt(cfg && cfg.offlineDeleteSec, 10) || 9999999999);
         return sec * 1000;
     }
 
@@ -219,4 +219,3 @@ function createReloginReminderService(options) {
 module.exports = {
     createReloginReminderService,
 };
-
